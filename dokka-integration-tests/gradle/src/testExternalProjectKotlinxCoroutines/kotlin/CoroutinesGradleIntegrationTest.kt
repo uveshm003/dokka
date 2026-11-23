@@ -58,7 +58,12 @@ class CoroutinesGradleIntegrationTest : AbstractGradleIntegrationTest(), TestOut
             //  Unknown annotation value `ExperimentalWasmInterop::class` in kotlinx-coroutines-core/wasmWasi/src/internal/CoroutineExceptionHandlerImpl.kt:51:8
             // https://github.com/Kotlin/kotlinx.coroutines/pull/4641:
             //  there are a lot of unresolved links in coroutines - which will be potentially fixed in this PR
-            "-Pdokka_it_failOnWarning=false"
+            "-Pdokka_it_failOnWarning=false",
+            // Cap the heap of the Kotlin daemon spawned by the tested project (kotlinx.coroutines):
+            // on CI the total of Gradle daemons, the test JVM and an uncapped Kotlin daemon
+            // can starve a 16 GiB hosted runner, and the kernel then kills a daemon
+            // (surfaced as DaemonDisappearedException) or the runner agent itself.
+            "-Pkotlin.daemon.jvmargs=-Xmx2g"
         ).buildRelaxed()
 
         assertContains(

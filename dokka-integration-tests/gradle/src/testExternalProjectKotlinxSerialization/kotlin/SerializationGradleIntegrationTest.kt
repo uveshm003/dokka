@@ -52,7 +52,12 @@ class SerializationGradleIntegrationTest : AbstractGradleIntegrationTest(), Test
         val result = createGradleRunner(
             buildVersions,
             ":dokkaGenerate",
-            "-Pdokka_it_failOnWarning=true"
+            "-Pdokka_it_failOnWarning=true",
+            // Cap the heap of the Kotlin daemon spawned by the tested project (kotlinx.coroutines):
+            // on CI the total of Gradle daemons, the test JVM and an uncapped Kotlin daemon
+            // can starve a 16 GiB hosted runner, and the kernel then kills a daemon
+            // (surfaced as DaemonDisappearedException) or the runner agent itself.
+            "-Pkotlin.daemon.jvmargs=-Xmx2g"
         ).buildRelaxed()
 
         assertContains(
